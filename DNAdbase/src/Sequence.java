@@ -18,8 +18,7 @@
 // during the discussion. I have violated neither the spirit nor
 // letter of this restriction.
 /**
- * MemoryPool class manages the 16-block in-memory
- * pool.
+ * Sequence class
  * 
  * @author James Kim (thejameskim)
  * @author Natalie Kakish (Nataliekakish)
