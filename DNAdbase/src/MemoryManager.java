@@ -166,18 +166,18 @@ public class MemoryManager {
      * @param seq
      * @return byte array
      */
-    private byte[] seqToBinary(String seq) {
-        
+    public byte[] seqToBinary(String seq) {
+
         int bytes = 0;
-        
+
         int padding = 8 - ((seq.length() * 2) % 8);
-        byte[] byteArr = new byte[seq.length() * 2 + padding];
+        byte[] byteArr = new byte[(seq.length() * 2 + padding) / 8];
 
         int byteIndex = 0;
         int i = 0;
         while (i < seq.length()) {
-            //AACCC
-            //00 00 01 01     01 00 00 00 
+            // AGTACCC
+            // 00 10 11 00 01 01 01 00
 
             char currChar = seq.charAt(i);
             // 00
@@ -188,6 +188,7 @@ public class MemoryManager {
             else if (currChar == 'C') {
                 bytes = bytes << 2;
                 bytes += 1;
+
             }
             // 10
             else if (currChar == 'G') {
@@ -199,29 +200,30 @@ public class MemoryManager {
                 bytes = bytes << 2;
                 bytes += 3;
             }
-            
+
             i++;
-            
+
             if (i % 4 == 0) {
-                
+
                 byteArr[byteIndex] = (byte)bytes;
+
                 byteIndex++;
                 bytes = 0;
             }
             else if (i == seq.length()) {
+
                 bytes = bytes << padding;
+                // System.out.println((byte)bytes);
                 byteArr[byteIndex] = (byte)bytes;
             }
-            
+
         }
-        
-        String s = new String(byteArr);
-        System.out.println(s);
-        
-//        for (int j = 0; j < byteArr.length; j++) {
-//            System.out.println()
-//        }
-        
+
+        System.out.println(byteArr.length);
+// for (int j = 0; j < byteArr.length; j++) {
+// System.out.println(Integer.toBinaryString(byteArr[j]));
+// }
+
         return byteArr;
 
     }
@@ -233,9 +235,40 @@ public class MemoryManager {
      * 
      * @return sequence
      */
-    private String binaryToSeq(byte[] bin) {
+    public String binaryToSeq(byte[] bin, int seqLength) {
+        String s = "";
 
-        return "";
+        // 0011 //00 11 01 10
+        int padding = 8 - ((seqLength * 2) % 8);
+        int mask = 0;
+        int ct = 0;
+        for (int i = 0; i < bin.length; i++) {
+            int shiftAmt = 0;
+            for (int j = 0; j < 4; j++) {
+                if (ct < bin.length * 8 - padding) {
+                    mask = bin[i] << shiftAmt;
+                    mask = bin[i] >> (6 - shiftAmt);
+                    mask = mask & 3;
+
+                    if (mask == 0) {
+                        s += "A";
+                    }
+                    else if (mask == 1) {
+                        s += "C";
+                    }
+                    else if (mask == 2) {
+                        s += "G";
+                    }
+                    else if (mask == 3) {
+                        s += "T";
+                    }
+                    shiftAmt += 2;
+                    ct += 2;
+                }
+
+            }
+        }
+        // System.out.println(s);
+        return s;
     }
-
 }
