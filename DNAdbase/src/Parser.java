@@ -34,7 +34,7 @@ public class Parser {
     private MemoryManager memManager;
 
     /** the hash map storing the handles */
-    private HashTable<Handle> hashTable;
+    private HashTable<String, Handle> hashTable;
 
     /** array for hash table */
     private Handle[] handles;
@@ -49,7 +49,7 @@ public class Parser {
     public Parser(String file, int hashTableSz, File memFile) {
 
         handles = new Handle[hashTableSz];
-        hashTable = new HashTable<Handle>(handles);
+        hashTable = new HashTable<String, Handle>(handles);
         memManager = new MemoryManager(memFile);
 
         // reading each line
@@ -84,7 +84,7 @@ public class Parser {
 
             Handle handle = memManager.insert(seqID, seqLen, seq);
             if (handle != null) {
-                hashTable.insert(seq, handle);
+                hashTable.insert(seqID, handle);
             }
         }
 

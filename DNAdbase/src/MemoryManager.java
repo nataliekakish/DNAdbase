@@ -167,28 +167,62 @@ public class MemoryManager {
      * @return byte array
      */
     private byte[] seqToBinary(String seq) {
+        
+        int bytes = 0;
+        
+        int padding = 8 - ((seq.length() * 2) % 8);
+        byte[] byteArr = new byte[seq.length() * 2 + padding];
 
-        for (int i = 0; i < seq.length(); i++) {
+        int byteIndex = 0;
+        int i = 0;
+        while (i < seq.length()) {
+            //AACCC
+            //00 00 01 01     01 00 00 00 
 
             char currChar = seq.charAt(i);
             // 00
             if (currChar == 'A') {
-
+                bytes = bytes << 2;
             }
             // 01
             else if (currChar == 'C') {
-
+                bytes = bytes << 2;
+                bytes += 1;
             }
             // 10
             else if (currChar == 'G') {
-
+                bytes = bytes << 2;
+                bytes += 2;
             }
             // 11
             else if (currChar == 'T') {
-
+                bytes = bytes << 2;
+                bytes += 3;
             }
+            
+            i++;
+            
+            if (i % 4 == 0) {
+                
+                byteArr[byteIndex] = (byte)bytes;
+                byteIndex++;
+                bytes = 0;
+            }
+            else if (i == seq.length()) {
+                bytes = bytes << padding;
+                byteArr[byteIndex] = (byte)bytes;
+            }
+            
         }
-        return new byte[5];
+        
+        String s = new String(byteArr);
+        System.out.println(s);
+        
+//        for (int j = 0; j < byteArr.length; j++) {
+//            System.out.println()
+//        }
+        
+        return byteArr;
 
     }
 
