@@ -57,26 +57,28 @@ public class HashTable<K, V> {
      * @param x
      *            , the object
      */
-    public boolean insert(K s, V x) {
+    public boolean insert(K s, V x, MemoryManager manager) {
         // use hash function to find position
         int pos = (int)sfold((String)s, size);
         // if spot is taken
         if (hashTable[pos] != null) {
 
             // position after probing
-            int pos2 = linearProbeInsert(pos);
+            int pos2 = linearProbeInsert(pos, s, manager);
             // if bucket is full
             if (pos2 == -1) {
                 return false;
             }
             else {
                 hashTable[pos2] = x;
+                tombstones[pos2] = false;
                 return true;
             }
         }
         // if spot is empty
         else {
             hashTable[pos] = x;
+            tombstones[pos] = false;
             return true;
         }
     }
@@ -91,53 +93,77 @@ public class HashTable<K, V> {
      *            , the object
      * @return true if successful, false otherwise
      */
-    public boolean remove(K s, V x) {
+    public boolean remove(K s, V x, MemoryManager manager) {
         int pos = (int)sfold((String)s, size);
 
         if (hashTable[pos] != null) {
 
-            hashTable[pos] = null;
-            tombstones[pos] = true;
-            return true;
-        }
-        else {
-            if (tombstones[pos] == true) {
+            // position after probing
+            int pos2 = linearProbeInsert(pos, s, manager);
+
+            if (pos2 == -1) {
                 return false;
             }
-            // we have to linear probe to find the
-            // object to remove
-            return true;
+            else {
+                hashTable[pos2] = null;
+                tombstones[pos2] = true;
+                return true;
+            }
+
+        }
+        else {
+            return false;
 
         }
     }
 
 
-    public int linearProbeRemove(int pos) {
+    /**
+     * Probe for the index to remove
+     * 
+     * @param pos
+     *            position
+     * @param s
+     *            key
+     * @param manager
+     *            memory manager
+     * @return int index
+     */
+    public int linearProbeRemove(int pos, K s, MemoryManager manager) {
         int startOfBucket = findStartOfBucket(pos); // find start of bucket
         int endOfBucket = findEndOfBucket(pos);
 
         // Position to end of bucket
         for (int i = pos; i < endOfBucket; i++) {
-            // if found empty spot
-            if (hashTable[i] != null) {
-                // if there's a tombstone
-                if (tombstones[i] == false) {
+            // if the value is not null and it's not a tombstone
+            if (hashTable[i] != null && tombstones[i] == false) {
+                // if the handles are equal to each other
+                if (s.equals(manager.getSequenceID((Handle)hashTable[i]))) {
                     return i;
                 }
 
+            } // if empty spot is encountered while probing, nothing to remove
+              // Keep probing if there's a tombstone
+            else if (hashTable[i] == null && tombstones[i] == false) {
+                return -1;
             }
         }
 
         // Wrap around to start of bucket to position
         for (int i = startOfBucket; i < pos; i++) {
-            // if found empty spot
-            if (hashTable[i] == null) {
-                // if there's a tombstone
-                if (tombstones[i] == false) {
+            // if the value is not null and it's not a tombstone
+            if (hashTable[i] != null && tombstones[i] == false) {
+                // if the handles are equal to each other
+                if (s.equals(manager.getSequenceID((Handle)hashTable[i]))) {
                     return i;
                 }
+
+            } // if empty spot is encountered while probing, nothing to remove
+            else if (hashTable[i] == null && tombstones[i] == false) {
+                return -1;
             }
         }
+        // Reached end of probing and nothing was found
         return -1;
     }
 
@@ -146,34 +172,75 @@ public class HashTable<K, V> {
      * linearly probes bucket to find empty spot
      * for the insert function
      * 
+     * @param pos
+     *            position
+     * @param s
+     *            key
+     * @param manager
+     *            memory manager
      * @return the spot found, -1 if not found
      */
-    public int linearProbeInsert(int pos) {
+    public int linearProbeInsert(int pos, K s, MemoryManager manager) {
         int startOfBucket = findStartOfBucket(pos); // find start of bucket
-        int endOfBucket = findEndOfBucket(pos);
+        int endOfBucket = findEndOfBucket(pos); // find end of the bucket
 
+        int indexOfTombstone = -1;
 
         // Position to end of bucket
         for (int i = pos; i <= endOfBucket; i++) {
-            // if found empty spot
+            // If found empty spot or if there is a tombstone at that index
             if (hashTable[i] == null) {
-                // if there's a tombstone
-                if (tombstones[i] == false) {
-                    return i;
+
+                // If we already found a tombstone we can insert at
+                if (indexOfTombstone != -1) {
+                    return indexOfTombstone;
                 }
+                // Else insert at this empty spot
+                return i;
 
             }
+            // Found duplicate, return -1; if key is equal to key of handle at
+            // index i
+            else if (hashTable[i] != null && s.equals(manager.getSequenceID(
+                (Handle)hashTable[i]))) {
+                return -1;
+            }
+            // If found potential tombstone to insert; keep probing for
+            // duplicates
+            else if (tombstones[i] == true && indexOfTombstone == -1) {
+                indexOfTombstone = i;
+            }
+
         }
 
         // Wrap around to start of bucket to position
         for (int i = startOfBucket; i < pos; i++) {
-            // if found empty spot
+            // If found empty spot or if there is a tombstone at that index
             if (hashTable[i] == null) {
-                // if there's a tombstone
-                if (tombstones[i] == false) {
-                    return i;
+
+                // If we already found a tombstone we can insert at
+                if (indexOfTombstone != -1) {
+                    return indexOfTombstone;
                 }
+                // Else insert at this empty spot
+                return i;
+
             }
+            // Found duplicate, return -1
+            else if (hashTable[i] != null && s.equals(manager.getSequenceID(
+                (Handle)hashTable[i]))) {
+
+                return -1;
+            }
+            // If found potential tombstone to insert; keep probing for
+            // duplicates
+            else if (tombstones[i] == true && indexOfTombstone == -1) {
+                indexOfTombstone = i;
+            }
+        }
+
+        if (indexOfTombstone != -1) {
+            return indexOfTombstone;
         }
         return -1;
     }
@@ -245,24 +312,23 @@ public class HashTable<K, V> {
         sum = (sum * sum) >> 8;
         return (Math.abs(sum) % M);
     }
-    
+
+
     /**
      * Prints the contents of the hash table
      */
     public void printHashTable() {
-        
+
         for (int i = 0; i < size; i++) {
             if (hashTable[i] == null) {
                 System.out.println("Index: " + i + " [null]");
-                
+
             }
             else {
                 System.out.println("Index: " + i + " [" + hashTable[i] + "]");
             }
         }
-            
-        
-        
+
     }
 
 }

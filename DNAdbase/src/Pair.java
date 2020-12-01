@@ -89,5 +89,18 @@ public class Pair {
         return len;
 
     }
+    
+    /**
+     * Equals method
+     * @param pair to compare to
+     * @return boolean for equality
+     * @Override
+     */
+    public boolean equals(Pair pair) {
+        if (this.getLoc() == pair.getLoc() && this.getLen() == pair.getLen()) {
+            return true;
+        }
+        return false;
+    }
 
 }

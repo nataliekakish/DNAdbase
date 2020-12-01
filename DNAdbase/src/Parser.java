@@ -1,4 +1,5 @@
 import java.io.File;
+import java.io.IOException;
 import java.util.Scanner;
 
 // On my honor:
@@ -45,8 +46,9 @@ public class Parser {
      * calls parseCommand with each line
      * 
      * @param file
+     * @throws IOException 
      */
-    public Parser(String file, int hashTableSz, File memFile) {
+    public Parser(String file, int hashTableSz, File memFile) throws IOException {
 
         handles = new Handle[hashTableSz];
         hashTable = new HashTable<String, Handle>(handles);
@@ -71,8 +73,9 @@ public class Parser {
      * 
      * @param command
      *            , the command
+     * @throws IOException 
      */
-    public void parseCommand(String command) {
+    public void parseCommand(String command) throws IOException {
 
         String[] line = command.split("\\s+");
 
@@ -84,7 +87,7 @@ public class Parser {
 
             Handle handle = memManager.insert(seqID, seqLen, seq);
             if (handle != null) {
-                hashTable.insert(seqID, handle);
+                hashTable.insert(seqID, handle, memManager);
             }
         }
 
@@ -92,7 +95,7 @@ public class Parser {
         else if (line[0].trim().equals("remove")) {
             String seqID = line[1].trim();
             Handle handle = memManager.remove(seqID);
-            hashTable.insert(seqID, handle);
+            hashTable.insert(seqID, handle, memManager);
         }
         // print
         else if (line[0].trim().equals("print")) {

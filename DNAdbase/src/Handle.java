@@ -30,7 +30,6 @@ public class Handle {
     private Pair seqIdHandle;
     private Pair seqHandle;
 
-
     /**
      * creates a new handle object
      * 
@@ -95,6 +94,20 @@ public class Handle {
      */
     public void setSeqHandle(Pair sequenceHandle) {
         seqHandle = sequenceHandle;
+    }
+
+    /**
+     * Equals method
+     * @param handle to compare to
+     * @return boolean for equality
+     * @Override
+     */
+    public boolean equals(Handle handle) {
+        if (this.getSeqIdHandle().equals(handle.getSeqIdHandle()) && this
+            .getSeqHandle().equals(handle.getSeqHandle())) {
+            return true;
+        }
+        return false;
     }
 
 }

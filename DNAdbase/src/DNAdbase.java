@@ -36,8 +36,10 @@ public class DNAdbase {
      * 
      * @param args
      *            , commandline arguments
+     * @throws IOException 
+     * @throws NumberFormatException 
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws NumberFormatException, IOException {
         File memFile = null;
         // creating the memory file
         try {

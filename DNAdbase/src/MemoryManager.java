@@ -1,4 +1,7 @@
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.LinkedList;
 
 // On my honor:
@@ -40,6 +43,11 @@ public class MemoryManager {
 
     /** the memory file to manage */
     private File memFile;
+    
+    /**
+     * Memory file
+     */
+    private RandomAccessFile raf;
 
 
     /**
@@ -52,9 +60,33 @@ public class MemoryManager {
     public MemoryManager(File memoryFile) {
         freeBlocksList = new LinkedList<Pair>();
         memFile = memoryFile;
+        try {
+            raf = new RandomAccessFile(memFile, "rw");
+        }
+        catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 
     }
-
+    
+    /**
+     * Gets the handle from sequence ID
+     * @param sequenceID the sequence ID
+     * @return Handle handle
+     */
+    public Handle getHandle(String sequenceID) {
+        return null;
+    }
+    
+    /**
+     * Gets the sequenceID based on handle from the memory file
+     * @param handle handle
+     * @return String sequenceID
+     */
+    public String getSequenceID(Handle handle) {
+        return null;
+    }
 
     /**
      * inserts a sequence into the memory file
@@ -65,8 +97,9 @@ public class MemoryManager {
      *            , the sequence length
      * @param seq
      *            the sequence
+     * @throws IOException 
      */
-    public Handle insert(String seqID, int length, String seq) {
+    public Handle insert(String seqID, int length, String seq) throws IOException {
         // checking if length is the actual length of seq
         int seqLength = seq.length();
         if (seqLength != length) {
@@ -110,14 +143,20 @@ public class MemoryManager {
      * 
      * @param seqID
      * @param length
+     * @throws IOException 
      */
-    private Pair insertSequenceID(String seqID) {
+    private Pair insertSequenceID(String seqID) throws IOException {
         int pos = bestFitPos();
-        // not sure if length in bytes or string
         int length = seqID.length();
-        // convert to binary
-        // output to binary file
+        
+        // Convert to binary and write to memory file
+        byte[] sequenceIDByte = seqToBinary(seqID);
+        raf.seek(pos);
+        raf.write(sequenceIDByte);
+        
         // update freeBlocksList
+        
+        
         return new Pair(pos, length);
 
     }
@@ -127,13 +166,20 @@ public class MemoryManager {
      * inserts sequence
      * 
      * @param sequence
+     * @throws IOException 
      */
-    private Pair insertSequence(String sequence) {
+    private Pair insertSequence(String sequence) throws IOException {
         int pos = bestFitPos();
         int length = sequence.length();
-        // convert to binary
-        // output to binary file
+        
+        // Convert to binary and write to memory file
+        byte[] sequenceByte = seqToBinary(sequence);
+        raf.seek(pos);
+        raf.write(sequenceByte);
+        
         // update freeBlocksList
+        
+        
         return new Pair(pos, length);
 
     }
