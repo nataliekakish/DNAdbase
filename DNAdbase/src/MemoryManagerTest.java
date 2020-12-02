@@ -123,8 +123,9 @@ public class MemoryManagerTest extends TestCase {
 
     /**
      * tests updateFreeBlocksList
+     * @throws IOException 
      */
-    public void testUpdateFreeBlocksList() {
+    public void testUpdateFreeBlocksList() throws IOException {
         LinkedList<Pair> freeBlocks = new LinkedList<Pair>();
         freeBlocks.add(new Pair(0, 5));
         freeBlocks.add(new Pair(5, 10));

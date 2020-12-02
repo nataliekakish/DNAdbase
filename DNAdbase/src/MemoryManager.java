@@ -47,7 +47,6 @@ public class MemoryManager {
     /** Memory file */
     private RandomAccessFile raf;
 
-
     /**
      * creates a MemoryManager object for the
      * given file
@@ -172,15 +171,17 @@ public class MemoryManager {
      * 
      * @param seqID
      *            , the sequence ID
+     * @throws IOException
      */
-    public void remove(Handle handle) {
+    public void remove(Handle handle) throws IOException {
 
         Pair seqHandle = handle.getSeqHandle();
         Pair seqIdHandle = handle.getSeqIdHandle();
 
-        System.out.println("list size: " + freeBlocksList.size());
+        // System.out.println("list size: " + freeBlocksList.size());
+        
+        // When the size of free block list is 0
         if (freeBlocksList.size() == 0) {
-            System.out.println("removing 1");
             if (seqIdHandle.getLoc() > seqHandle.getLoc()) {
 
                 int seqIdPadding = (8 - ((seqIdHandle.getLen()) % 8)) % 8;
@@ -188,38 +189,66 @@ public class MemoryManager {
 
                 freeBlocksList.add(new Pair(seqHandle.getLoc(), seqHandle
                     .getLen() + seqPadding));
+                updateFreeBlocksList();
                 freeBlocksList.add(new Pair(seqIdHandle.getLoc(), seqIdHandle
                     .getLen() + seqIdPadding));
+                updateFreeBlocksList();
             }
             else {
 
                 int seqIdPadding = (8 - ((seqIdHandle.getLen()) % 8)) % 8;
                 int seqPadding = (8 - ((seqHandle.getLen()) % 8)) % 8;
 
-                System.out.println("removing");
                 freeBlocksList.add(new Pair(seqIdHandle.getLoc(), seqIdHandle
                     .getLen() + seqIdPadding));
+                updateFreeBlocksList();
                 freeBlocksList.add(new Pair(seqHandle.getLoc(), seqHandle
                     .getLen() + seqPadding));
+                updateFreeBlocksList();
             }
 
         }
-        else {
+        else { // When size of free block list is greater than 0
 
+            boolean insertedSequence = false;
+
+            int seqIdPadding = (8 - ((seqIdHandle.getLen()) % 8)) % 8;
+            int seqPadding = (8 - ((seqHandle.getLen()) % 8)) % 8;
+
+            // Find a place to insert free block after remove
+            // For the sequence
             for (int i = 0; i < freeBlocksList.size(); i++) {
-                if (freeBlocksList.get(i).getLoc() >= seqHandle.getLoc()) {
+                if (freeBlocksList.get(i).getLoc() > seqHandle.getLoc()) {
                     freeBlocksList.add(i, new Pair(seqHandle.getLoc(), seqHandle
-                        .getLen()));
+                        .getLen() + seqPadding));
+                    insertedSequence = true;
+                    updateFreeBlocksList();
                     break;
                 }
             }
 
+            if (!insertedSequence) {
+                freeBlocksList.add(new Pair(seqHandle.getLoc(), seqHandle
+                    .getLen() + seqPadding));
+                updateFreeBlocksList();
+            }
+
+            insertedSequence = false;
+            // For the sequenceID
             for (int i = 0; i < freeBlocksList.size(); i++) {
-                if (freeBlocksList.get(i).getLoc() >= seqIdHandle.getLoc()) {
+                if (freeBlocksList.get(i).getLoc() > seqIdHandle.getLoc()) {
                     freeBlocksList.add(i, new Pair(seqIdHandle.getLoc(),
-                        seqIdHandle.getLen()));
+                        seqIdHandle.getLen() + seqIdPadding));
+                    insertedSequence = true;
+                    updateFreeBlocksList();
                     break;
                 }
+            }
+
+            if (!insertedSequence) {
+                freeBlocksList.add(new Pair(seqIdHandle.getLoc(), seqIdHandle
+                    .getLen() + seqIdPadding));
+                updateFreeBlocksList();
             }
 
         }
@@ -302,17 +331,35 @@ public class MemoryManager {
     /**
      * updates free block list after removing
      * makes sure there aren't any adjacent free blocks
+     * 
+     * @throws IOException
      */
-    public void updateFreeBlocksList() {
-        for (int i = 0; i < freeBlocksList.size() - 1; i++) {
-            Pair curr = freeBlocksList.get(i);
-            Pair next = freeBlocksList.get(i + 1);
+    public void updateFreeBlocksList() throws IOException {
+        
+        
+        for (int i = 1; i < freeBlocksList.size(); i++) {
+            Pair curr = freeBlocksList.get(i - 1);
+            Pair next = freeBlocksList.get(i);
             // if two free blocks adjacent, merge
             if (curr.getLoc() + curr.getLen() == next.getLoc()) {
-                freeBlocksList.get(i).setLen(curr.getLen() + next.getLen());
-                freeBlocksList.remove(i + 1);
+                
+                int currPadding = (8 - ((curr.getLen()) % 8)) % 8;
+                int nextPadding = (8 - ((next.getLen()) % 8)) % 8;
+                
+                
+                freeBlocksList.get(i - 1).setLen(curr.getLen() + currPadding + next.getLen() + nextPadding);
+                freeBlocksList.remove(i);
+                i--;
             }
 
+        }
+        
+//        
+//        System.out.println("RAF size: " + raf.length());
+//        System.out.println("Sequence location + length " + (freeBlocksList.get(freeBlocksList.size() - 1).getLen() + freeBlocksList.get(freeBlocksList.size() - 1).getLoc()) / 8);
+
+        if (raf.length() == (freeBlocksList.get(freeBlocksList.size() - 1).getLen() + freeBlocksList.get(freeBlocksList.size() - 1).getLoc()) / 8) {
+            freeBlocksList.remove(freeBlocksList.size() - 1);
         }
 
     }

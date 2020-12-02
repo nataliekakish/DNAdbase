@@ -110,10 +110,12 @@ public class Parser {
 
             if (handle != null) {
                 memManager.remove(handle);
-                // print success statement
+                System.out.println("Sequence Removed " + memManager.getSequenceID(handle) + ":");
+                System.out.println(memManager.getSequence(handle));
+                
             }
             else {
-                // print failed
+                System.out.println("SequenceID " + seqID + " not found");
             }
         }
         // print
@@ -124,6 +126,7 @@ public class Parser {
         else if (line[0].trim().equals("search")) {
             String seqID = line[1].trim();
             search(seqID);
+            
         }
 
     }

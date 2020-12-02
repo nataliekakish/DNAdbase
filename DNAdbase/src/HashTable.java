@@ -106,11 +106,10 @@ public class HashTable<K, V> {
     public V remove(K s, MemoryManager manager) throws IOException {
         int pos = (int)sfold((String)s, size);
 
-        if (hashTable[pos] != null) {
+        if (hashTable[pos] != null || (hashTable[pos] == null && tombstones[pos] == true)) {
 
             // position after probing
             int pos2 = linearProbeRemove(pos, s, manager);
-            System.out.println("pos 2 remove: " + pos2);
 
             if (pos2 == -1) {
                 return null;
@@ -125,7 +124,7 @@ public class HashTable<K, V> {
 
         }
         else {
-            return hashTable[pos];
+            return null;
 
         }
     }
@@ -150,7 +149,7 @@ public class HashTable<K, V> {
             int pos2 = linearProbeRemove(pos, s, manager);
 
             if (pos2 == -1) {
-                return hashTable[pos2];
+                return null;
             }
             else {
 
@@ -159,7 +158,7 @@ public class HashTable<K, V> {
 
         }
         else {
-            return hashTable[pos];
+            return null;
         }
 
     }
@@ -362,24 +361,6 @@ public class HashTable<K, V> {
 
         sum = (sum * sum) >> 8;
         return (Math.abs(sum) % M);
-    }
-
-
-    /**
-     * Prints the contents of the hash table
-     */
-    public void printHashTable() {
-
-        for (int i = 0; i < size; i++) {
-            if (hashTable[i] == null) {
-                System.out.println("Index: " + i + " [null]");
-
-            }
-            else {
-                System.out.println("Index: " + i + " [" + hashTable[i] + "]");
-            }
-        }
-
     }
 
 
