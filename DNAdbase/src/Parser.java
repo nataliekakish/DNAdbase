@@ -46,21 +46,23 @@ public class Parser {
      * calls parseCommand with each line
      * 
      * @param file
-     * @throws IOException 
+     * @throws IOException
      */
-    public Parser(String file, int hashTableSz, File memFile) throws IOException {
+    public Parser(String file, int hashTableSz, File memFile)
+        throws IOException {
 
         handles = new Handle[hashTableSz];
         hashTable = new HashTable<String, Handle>(handles);
         memManager = new MemoryManager(memFile);
-
+        File filee = new File(file);
         // reading each line
-        Scanner reader = new Scanner(file);
+        Scanner reader = new Scanner(filee);
         while (reader.hasNextLine()) {
             String command = reader.nextLine();
             if (command.contains("insert")) {
+                System.out.println("inserting");
                 // so that both lines are included in the insert command
-                command = command + reader.nextLine();
+                command = command + " " + reader.nextLine();
             }
             parseCommand(command);
 
@@ -73,7 +75,7 @@ public class Parser {
      * 
      * @param command
      *            , the command
-     * @throws IOException 
+     * @throws IOException
      */
     public void parseCommand(String command) throws IOException {
 
@@ -82,10 +84,15 @@ public class Parser {
         // insert seqID length
         if (line[0].trim().equals("insert")) {
             String seqID = line[1].trim();
+            System.out.println("seqID " + seqID);
             int seqLen = Integer.parseInt(line[2].trim());
             String seq = line[3].trim();
-
+            System.out.println("seq " + seq);
             Handle handle = memManager.insert(seqID, seqLen, seq);
+            System.out.println("seqid handle loc: "+ handle.getSeqIdHandle().getLoc());
+            System.out.println("seqid handle len: "+ handle.getSeqIdHandle().getLen());
+            System.out.println("seq handle loc: "+ handle.getSeqHandle().getLoc());
+            System.out.println("seq handle len: "+ handle.getSeqHandle().getLen());
             if (handle != null) {
                 hashTable.insert(seqID, handle, memManager);
             }
@@ -94,8 +101,15 @@ public class Parser {
         // remove seqID
         else if (line[0].trim().equals("remove")) {
             String seqID = line[1].trim();
-            Handle handle = memManager.remove(seqID);
-            hashTable.insert(seqID, handle, memManager);
+            Handle handle = hashTable.remove(seqID, memManager);
+            if (handle != null) {
+                memManager.remove(handle);
+                // print success statement
+
+            }
+            else {
+                // print failed
+            }
         }
         // print
         else if (line[0].trim().equals("print")) {
@@ -115,16 +129,67 @@ public class Parser {
      * with the given sequence ID
      * 
      * @param seqID
+     *            , the sequence ID
+     * @throws IOException
      */
-    public void search(String seqID) {
+    public void search(String seqID) throws IOException {
+        Handle handle = hashTable.find(seqID, memManager);
+        if (handle == null) {
+            System.out.println("SequenceID " + seqID + " not found");
+        }
+        else {
+            String seq = memManager.getSequence(handle);
+            System.out.println("Sequence Found: " + seq);
+        }
 
     }
 
 
     /**
      * prints all data in the HashTable
+     * 
+     * @throws IOException
      */
-    public void print() {
+    public void print() throws IOException {
+
+        if (hashTable.getNumObjects() == 0) {
+            System.out.println("Sequence IDs:");
+            System.out.println("Free Block List: none");
+        }
+        else {
+
+            Handle[] handles = hashTable.getArray();
+
+            System.out.println("Sequence IDs:");
+            for (int i = 0; i < handles.length; i++) {
+
+                if (handles[i] != null) {
+                    String seq = memManager.getSequenceID(handles[i]);
+                    System.out.println(seq + ": hash slot [" + i + "]");
+
+                }
+            }
+            // hashTable.printHashTable(memManager);
+
+            if (memManager.getFreeBlocksList().size() == 0) {
+                System.out.println("Free Block List: none");
+            }
+            else {
+
+                System.out.println("Free Block List:");
+                for (int i = 0; i < memManager.getFreeBlocksList()
+                    .size(); i++) {
+
+                    System.out.println("[Block " + i + 1
+                        + "] Starting Byte Location: " + memManager
+                            .getFreeBlocksList().get(i).getLoc() + ", Size "
+                        + memManager.getFreeBlocksList().get(i).getLoc()
+                        + " bytes");
+
+                }
+
+            }
+        }
 
     }
 

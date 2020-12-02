@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.util.Arrays;
 
 // On my honor:
@@ -29,9 +30,11 @@ import java.util.Arrays;
  */
 public class HashTable<K, V> {
 
+    private int numObjects;
     private V[] hashTable;
     private int size;
     private Boolean[] tombstones;
+
 
     /**
      * creates a fixed size hashtable
@@ -40,6 +43,9 @@ public class HashTable<K, V> {
      * @param hTable
      */
     public HashTable(V[] hTable) {
+
+        numObjects = 0;
+
         size = hTable.length;
         tombstones = new Boolean[size];
         // set all tombstones to false
@@ -56,8 +62,9 @@ public class HashTable<K, V> {
      *            , the string representing object
      * @param x
      *            , the object
+     * @throws IOException
      */
-    public boolean insert(K s, V x, MemoryManager manager) {
+    public boolean insert(K s, V x, MemoryManager manager) throws IOException {
         // use hash function to find position
         int pos = (int)sfold((String)s, size);
         // if spot is taken
@@ -71,6 +78,7 @@ public class HashTable<K, V> {
             }
             else {
                 hashTable[pos2] = x;
+                numObjects++;
                 tombstones[pos2] = false;
                 return true;
             }
@@ -78,7 +86,9 @@ public class HashTable<K, V> {
         // if spot is empty
         else {
             hashTable[pos] = x;
+            numObjects++;
             tombstones[pos] = false;
+            System.out.println(numObjects);
             return true;
         }
     }
@@ -92,29 +102,65 @@ public class HashTable<K, V> {
      * @param x
      *            , the object
      * @return true if successful, false otherwise
+     * @throws IOException
      */
-    public boolean remove(K s, V x, MemoryManager manager) {
+    public V remove(K s, MemoryManager manager) throws IOException {
         int pos = (int)sfold((String)s, size);
 
         if (hashTable[pos] != null) {
 
             // position after probing
-            int pos2 = linearProbeInsert(pos, s, manager);
+            int pos2 = linearProbeRemove(pos, s, manager);
 
             if (pos2 == -1) {
-                return false;
+                return hashTable[pos2];
             }
             else {
                 hashTable[pos2] = null;
                 tombstones[pos2] = true;
-                return true;
+                numObjects--;
+                return hashTable[pos2];
             }
 
         }
         else {
-            return false;
+            return hashTable[pos];
 
         }
+    }
+
+
+    /**
+     * finds the object in the hash table and returns it
+     * 
+     * @param s
+     *            , the object we're looking for
+     * @param manager
+     *            the manager
+     * @return the object
+     * @throws IOException
+     */
+    public V find(K s, MemoryManager manager) throws IOException {
+
+        int pos = (int)sfold((String)s, size);
+
+        if (hashTable[pos] != null) {
+            // position after probing
+            int pos2 = linearProbeRemove(pos, s, manager);
+
+            if (pos2 == -1) {
+                return hashTable[pos2];
+            }
+            else {
+
+                return hashTable[pos2];
+            }
+
+        }
+        else {
+            return hashTable[pos];
+        }
+
     }
 
 
@@ -128,8 +174,10 @@ public class HashTable<K, V> {
      * @param manager
      *            memory manager
      * @return int index
+     * @throws IOException
      */
-    public int linearProbeRemove(int pos, K s, MemoryManager manager) {
+    public int linearProbeRemove(int pos, K s, MemoryManager manager)
+        throws IOException {
         int startOfBucket = findStartOfBucket(pos); // find start of bucket
         int endOfBucket = findEndOfBucket(pos);
 
@@ -179,8 +227,10 @@ public class HashTable<K, V> {
      * @param manager
      *            memory manager
      * @return the spot found, -1 if not found
+     * @throws IOException
      */
-    public int linearProbeInsert(int pos, K s, MemoryManager manager) {
+    public int linearProbeInsert(int pos, K s, MemoryManager manager)
+        throws IOException {
         int startOfBucket = findStartOfBucket(pos); // find start of bucket
         int endOfBucket = findEndOfBucket(pos); // find end of the bucket
 
@@ -329,6 +379,24 @@ public class HashTable<K, V> {
             }
         }
 
+    }
+
+
+    /**
+     * returns the num of objects in the hashtable
+     * 
+     * @return numObjects the num of objects
+     */
+    public int getNumObjects() {
+        return numObjects;
+    }
+
+
+    /**
+     * returns hashTable array
+     */
+    public V[] getArray() {
+        return hashTable;
     }
 
 }

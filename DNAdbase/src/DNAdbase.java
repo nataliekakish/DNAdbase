@@ -36,23 +36,44 @@ public class DNAdbase {
      * 
      * @param args
      *            , commandline arguments
-     * @throws IOException 
-     * @throws NumberFormatException 
+     * @throws IOException
+     * @throws NumberFormatException
      */
-    public static void main(String[] args) throws NumberFormatException, IOException {
+    public static void main(String[] args)
+        throws NumberFormatException,
+        IOException {
         File memFile = null;
         // creating the memory file
-        try {
-            memFile = new File(args[3]);
-            memFile.createNewFile();
-        }
-        catch (IOException e) {
-            System.out.println("Couldnt create memory file");
-            e.printStackTrace();
-        }
-        if (memFile != null) {
-            new Parser(args[0], Integer.parseInt(args[2].trim()), memFile);
-        }
-    }
+        if (args.length >= 1) {
+            try {
+                memFile = new File(args[3]);
+                memFile.createNewFile();
+                if (memFile != null) {
+                    new Parser(args[0], Integer.parseInt(args[2].trim()),
+                        memFile);
+                }
+            }
+            catch (IOException e) {
+                System.out.println("Couldnt create memory file");
+                e.printStackTrace();
+            }
 
+        }
+
+        else {
+            try {
+                memFile = new File("output.bin");
+                memFile.createNewFile();
+                if (memFile != null) {
+                    new Parser("sampleIn.txt", 64, memFile);
+                }
+            }
+            catch (IOException e) {
+                System.out.println("Couldnt create memory file");
+                e.printStackTrace();
+            }
+
+        }
+
+    }
 }
