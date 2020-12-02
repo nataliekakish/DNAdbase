@@ -88,7 +88,6 @@ public class HashTable<K, V> {
             hashTable[pos] = x;
             numObjects++;
             tombstones[pos] = false;
-            System.out.println(numObjects);
             return true;
         }
     }

@@ -60,13 +60,14 @@ public class Parser {
         while (reader.hasNextLine()) {
             String command = reader.nextLine();
             if (command.contains("insert")) {
-                System.out.println("inserting");
+
                 // so that both lines are included in the insert command
                 command = command + " " + reader.nextLine();
             }
             parseCommand(command);
 
         }
+        reader.close();
     }
 
 
@@ -79,20 +80,24 @@ public class Parser {
      */
     public void parseCommand(String command) throws IOException {
 
-        String[] line = command.split("\\s+");
+        String[] line = command.trim().split("\\s+");
 
         // insert seqID length
         if (line[0].trim().equals("insert")) {
             String seqID = line[1].trim();
-            System.out.println("seqID " + seqID);
+
             int seqLen = Integer.parseInt(line[2].trim());
             String seq = line[3].trim();
-            System.out.println("seq " + seq);
+
             Handle handle = memManager.insert(seqID, seqLen, seq);
-            System.out.println("seqid handle loc: "+ handle.getSeqIdHandle().getLoc());
-            System.out.println("seqid handle len: "+ handle.getSeqIdHandle().getLen());
-            System.out.println("seq handle loc: "+ handle.getSeqHandle().getLoc());
-            System.out.println("seq handle len: "+ handle.getSeqHandle().getLen());
+            // System.out.println("seqid handle loc: "+
+            // handle.getSeqIdHandle().getLoc());
+            // System.out.println("seqid handle len: "+
+            // handle.getSeqIdHandle().getLen());
+            // System.out.println("seq handle loc: "+
+            // handle.getSeqHandle().getLoc());
+            // System.out.println("seq handle len: "+
+            // handle.getSeqHandle().getLen());
             if (handle != null) {
                 hashTable.insert(seqID, handle, memManager);
             }
@@ -164,7 +169,7 @@ public class Parser {
             for (int i = 0; i < handles.length; i++) {
 
                 if (handles[i] != null) {
-                    String seq = memManager.getSequenceID(handles[i]);
+                    String seq = memManager.getSequenceID(handles[i]);                    
                     System.out.println(seq + ": hash slot [" + i + "]");
 
                 }

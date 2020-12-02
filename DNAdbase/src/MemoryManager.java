@@ -93,18 +93,23 @@ public class MemoryManager {
      */
     public String getSequenceID(Handle handle) throws IOException {
 
-        byte[] b = new byte[handle.getSeqIdHandle().getLen() / 2];
-
         int x = handle.getSeqIdHandle().getLoc();
-        // System.out.println(x);
-        // System.out.println("length " + handle.getSeqIdHandle().getLen());
-        // System.out.println(raf.length());
+        System.out.println("location: " + x);
+        int padding = 0;
 
-        raf.read(b, x / 8, handle.getSeqIdHandle().getLen() / 2);
+        if ((handle.getSeqIdHandle().getLen()) % 8 != 0) {
+            padding = 8 - (handle.getSeqIdHandle().getLen() % 8);
+        }
 
-        System.out.println(handle.getSeqIdHandle().getLen() / 2);
+        byte[] b = new byte[(handle.getSeqIdHandle().getLen() + padding) / 8];
+
+        System.out.println("\n\nloc " + x / 8 + " length: " + (handle
+            .getSeqIdHandle().getLen() + padding) / 8);
+        System.out.println("raf length: " + raf.length());
+
+        raf.read(b, x / 8, (handle.getSeqIdHandle().getLen() + padding) / 8);
+
         String s = binaryToSeq(b, handle.getSeqIdHandle().getLen() / 2);
-
         return s;
     }
 
@@ -119,11 +124,17 @@ public class MemoryManager {
      */
     public String getSequence(Handle handle) throws IOException {
 
-        byte[] b = new byte[handle.getSeqHandle().getLen() / 4];
-        raf.read(b, handle.getSeqHandle().getLoc() / 8, handle.getSeqHandle()
-            .getLen() / 8);
+        int x = handle.getSeqHandle().getLoc();
+        int padding = 0;
 
-        String s = binaryToSeq(b, handle.getSeqHandle().getLen());
+        if ((handle.getSeqHandle().getLen()) % 8 != 0) {
+            padding = 8 - (handle.getSeqHandle().getLen() % 8);
+        }
+
+        byte[] b = new byte[(handle.getSeqHandle().getLen() + padding) / 8];
+        raf.read(b, x / 8, (handle.getSeqHandle().getLen() + padding) / 8);
+
+        String s = binaryToSeq(b, handle.getSeqHandle().getLen() / 2);
         return s;
     }
 
@@ -246,12 +257,13 @@ public class MemoryManager {
 
         if (freeBlocksList.size() == 0) {
             pos = (int)raf.length();
+            System.out.println("position after seeking: " + pos);
             raf.seek(pos);
             raf.write(sByte);
         }
         else {
             int bestFitPos = bestFitPos(sByte.length);
-            // System.out.println(sByte.length);
+
             if (bestFitPos == -1) {
                 pos = (int)raf.length();
                 raf.seek(pos);
@@ -388,7 +400,6 @@ public class MemoryManager {
             else if (i == seq.length()) {
 
                 bytes = bytes << padding;
-                // System.out.println((byte)bytes);
                 byteArr[byteIndex] = (byte)bytes;
             }
 
@@ -416,6 +427,8 @@ public class MemoryManager {
         // 0011 //00 11 01 10
         if (((seqLength * 2) % 8) != 0) {
             padding = 8 - ((seqLength * 2) % 8);
+            // System.out.print("padding for length " + seqLength + " is: "
+            // + padding);
         }
         int mask = 0;
         int ct = 0;

@@ -54,18 +54,12 @@ public class MemoryManagerTest extends TestCase {
         String s = memManager.binaryToSeq(arr, 40);
 
         assertEquals("AAAATTTTCCCCGGGGAAAACCCCGGGGTTTTAAAATTTT", s);
-        
-        byte[] arr2 = memManager.seqToBinary(
-            "AAAAA");
+
+        byte[] arr2 = memManager.seqToBinary("AAAAA");
         assertEquals(2, arr2.length);
-       
+
         String s2 = memManager.binaryToSeq(arr2, 5);
         assertEquals("AAAAA", s2);
-        
-       
-        
-        
-        
 
     }
 
