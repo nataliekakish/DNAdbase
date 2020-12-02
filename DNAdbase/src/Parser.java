@@ -107,10 +107,10 @@ public class Parser {
         else if (line[0].trim().equals("remove")) {
             String seqID = line[1].trim();
             Handle handle = hashTable.remove(seqID, memManager);
+
             if (handle != null) {
                 memManager.remove(handle);
                 // print success statement
-
             }
             else {
                 // print failed
@@ -169,7 +169,7 @@ public class Parser {
             for (int i = 0; i < handles.length; i++) {
 
                 if (handles[i] != null) {
-                    String seq = memManager.getSequenceID(handles[i]);                    
+                    String seq = memManager.getSequenceID(handles[i]);
                     System.out.println(seq + ": hash slot [" + i + "]");
 
                 }
@@ -185,10 +185,10 @@ public class Parser {
                 for (int i = 0; i < memManager.getFreeBlocksList()
                     .size(); i++) {
 
-                    System.out.println("[Block " + i + 1
+                    System.out.println("[Block " + (i + 1)
                         + "] Starting Byte Location: " + memManager
-                            .getFreeBlocksList().get(i).getLoc() + ", Size "
-                        + memManager.getFreeBlocksList().get(i).getLoc()
+                            .getFreeBlocksList().get(i).getLoc() / 8 + ", Size "
+                        + memManager.getFreeBlocksList().get(i).getLen() / 8
                         + " bytes");
 
                 }

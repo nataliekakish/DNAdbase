@@ -94,7 +94,7 @@ public class MemoryManager {
     public String getSequenceID(Handle handle) throws IOException {
 
         int x = handle.getSeqIdHandle().getLoc();
-        System.out.println("location: " + x);
+
         int padding = 0;
 
         if ((handle.getSeqIdHandle().getLen()) % 8 != 0) {
@@ -103,11 +103,8 @@ public class MemoryManager {
 
         byte[] b = new byte[(handle.getSeqIdHandle().getLen() + padding) / 8];
 
-        System.out.println("\n\nloc " + x / 8 + " length: " + (handle
-            .getSeqIdHandle().getLen() + padding) / 8);
-        System.out.println("raf length: " + raf.length());
-
-        raf.read(b, x / 8, (handle.getSeqIdHandle().getLen() + padding) / 8);
+        raf.seek(x / 8);
+        raf.read(b);
 
         String s = binaryToSeq(b, handle.getSeqIdHandle().getLen() / 2);
         return s;
@@ -132,7 +129,8 @@ public class MemoryManager {
         }
 
         byte[] b = new byte[(handle.getSeqHandle().getLen() + padding) / 8];
-        raf.read(b, x / 8, (handle.getSeqHandle().getLen() + padding) / 8);
+        raf.seek(x / 8);
+        raf.read(b);
 
         String s = binaryToSeq(b, handle.getSeqHandle().getLen() / 2);
         return s;
@@ -180,18 +178,29 @@ public class MemoryManager {
         Pair seqHandle = handle.getSeqHandle();
         Pair seqIdHandle = handle.getSeqIdHandle();
 
+        System.out.println("list size: " + freeBlocksList.size());
         if (freeBlocksList.size() == 0) {
+            System.out.println("removing 1");
             if (seqIdHandle.getLoc() > seqHandle.getLoc()) {
+
+                int seqIdPadding = (8 - ((seqIdHandle.getLen()) % 8)) % 8;
+                int seqPadding = (8 - ((seqHandle.getLen()) % 8)) % 8;
+
                 freeBlocksList.add(new Pair(seqHandle.getLoc(), seqHandle
-                    .getLen()));
+                    .getLen() + seqPadding));
                 freeBlocksList.add(new Pair(seqIdHandle.getLoc(), seqIdHandle
-                    .getLen()));
+                    .getLen() + seqIdPadding));
             }
             else {
+
+                int seqIdPadding = (8 - ((seqIdHandle.getLen()) % 8)) % 8;
+                int seqPadding = (8 - ((seqHandle.getLen()) % 8)) % 8;
+
+                System.out.println("removing");
                 freeBlocksList.add(new Pair(seqIdHandle.getLoc(), seqIdHandle
-                    .getLen()));
+                    .getLen() + seqIdPadding));
                 freeBlocksList.add(new Pair(seqHandle.getLoc(), seqHandle
-                    .getLen()));
+                    .getLen() + seqPadding));
             }
 
         }
@@ -257,7 +266,7 @@ public class MemoryManager {
 
         if (freeBlocksList.size() == 0) {
             pos = (int)raf.length();
-            System.out.println("position after seeking: " + pos);
+            // System.out.println("position after seeking: " + pos);
             raf.seek(pos);
             raf.write(sByte);
         }
@@ -270,13 +279,14 @@ public class MemoryManager {
                 raf.write(sByte);
             }
             else {
-                pos = freeBlocksList.get(bestFitPos).getLoc();
+                pos = freeBlocksList.get(bestFitPos).getLoc() / 8;
                 raf.seek(pos);
                 raf.write(sByte);
-                int newFreeBlockLen = freeBlocksList.get(bestFitPos).getLen()
-                    - sByte.length;
-                int newFreeBlockLoc = freeBlocksList.get(bestFitPos).getLoc()
-                    + sByte.length;
+
+                int newFreeBlockLen = (freeBlocksList.get(bestFitPos).getLen()
+                    - sByte.length * 8) / 8;
+                int newFreeBlockLoc = (freeBlocksList.get(bestFitPos).getLoc()
+                    + sByte.length * 8) / 8;
                 freeBlocksList.get(bestFitPos).setLen(newFreeBlockLen);
                 freeBlocksList.get(bestFitPos).setLoc(newFreeBlockLoc);
 

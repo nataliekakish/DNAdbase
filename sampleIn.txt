@@ -5,3 +5,17 @@ AAAATTTTCCCCGGGGAAAACCCCGGGGTTTTAAAATTTT
 insert AAAA  40
 AAAATTTTCCCCGGGGAAAACCCCGGGGTTTTAAAATTTT
 print
+
+insert AAA  4
+AAAA
+print
+
+
+
+              remove AAAA
+              print
+              
+              remove AAA
+              print
+              
+              

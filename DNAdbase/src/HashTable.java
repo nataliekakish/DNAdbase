@@ -110,15 +110,17 @@ public class HashTable<K, V> {
 
             // position after probing
             int pos2 = linearProbeRemove(pos, s, manager);
+            System.out.println("pos 2 remove: " + pos2);
 
             if (pos2 == -1) {
-                return hashTable[pos2];
+                return null;
             }
             else {
+                V v = hashTable[pos2];
                 hashTable[pos2] = null;
                 tombstones[pos2] = true;
                 numObjects--;
-                return hashTable[pos2];
+                return v;
             }
 
         }
