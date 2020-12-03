@@ -50,24 +50,32 @@ public class Parser {
      */
     public Parser(String file, int hashTableSz, File memFile)
         throws IOException {
+        
+        if (hashTableSz % 32 != 0) {
+            System.out.println("Error: hastable size must be a multiple of 32");
+            
+        } 
+        else {
+            handles = new Handle[hashTableSz];
+            hashTable = new HashTable<String, Handle>(handles);
+            memManager = new MemoryManager(memFile);
+            File filee = new File(file);
+            // reading each line
+            Scanner reader = new Scanner(filee);
+            while (reader.hasNextLine()) {
+                String command = reader.nextLine();
+                if (command.contains("insert")) {
 
-        handles = new Handle[hashTableSz];
-        hashTable = new HashTable<String, Handle>(handles);
-        memManager = new MemoryManager(memFile);
-        File filee = new File(file);
-        // reading each line
-        Scanner reader = new Scanner(filee);
-        while (reader.hasNextLine()) {
-            String command = reader.nextLine();
-            if (command.contains("insert")) {
+                    // so that both lines are included in the insert command
+                    command = command + " " + reader.nextLine();
+                }
+                parseCommand(command);
 
-                // so that both lines are included in the insert command
-                command = command + " " + reader.nextLine();
             }
-            parseCommand(command);
-
+            reader.close();
         }
-        reader.close();
+
+        
     }
 
 
@@ -88,16 +96,15 @@ public class Parser {
 
             int seqLen = Integer.parseInt(line[2].trim());
             String seq = line[3].trim();
+            
+            // If the sequence length and given length does not match
+            if (seqLen != seq.length()) {
+                System.out.println("Warning: Actual sequence length (" + seq.length() + ") does not match given length (" + seqLen + ")");
+            }
 
-            Handle handle = memManager.insert(seqID, seqLen, seq);
-            // System.out.println("seqid handle loc: "+
-            // handle.getSeqIdHandle().getLoc());
-            // System.out.println("seqid handle len: "+
-            // handle.getSeqIdHandle().getLen());
-            // System.out.println("seq handle loc: "+
-            // handle.getSeqHandle().getLoc());
-            // System.out.println("seq handle len: "+
-            // handle.getSeqHandle().getLen());
+            
+            Handle handle = memManager.insert(seqID, seq.length(), seq);
+
             if (handle != null) {
                 hashTable.insert(seqID, handle, memManager);
             }
@@ -110,6 +117,9 @@ public class Parser {
 
             if (handle != null) {
                 memManager.remove(handle);
+                if (hashTable.getNumObjects() == 0) {
+                    memManager.getFreeBlocksList().clear();
+                }
                 System.out.println("Sequence Removed " + memManager.getSequenceID(handle) + ":");
                 System.out.println(memManager.getSequence(handle));
                 

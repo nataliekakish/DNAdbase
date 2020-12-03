@@ -65,7 +65,7 @@ public class DNAdbase {
                 memFile = new File("output.bin");
                 memFile.createNewFile();
                 if (memFile != null) {
-                    new Parser("sampleIn.txt", 64, memFile);
+                    new Parser("sampleIn.txt", 32, memFile);
                 }
             }
             catch (IOException e) {

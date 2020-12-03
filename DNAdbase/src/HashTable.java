@@ -70,6 +70,7 @@ public class HashTable<K, V> {
         // if spot is taken
         if (hashTable[pos] != null) {
 
+            
             // position after probing
             int pos2 = linearProbeInsert(pos, s, manager);
             // if bucket is full

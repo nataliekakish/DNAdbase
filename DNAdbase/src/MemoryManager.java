@@ -46,6 +46,8 @@ public class MemoryManager {
 
     /** Memory file */
     private RandomAccessFile raf;
+    
+    private int position;
 
     /**
      * creates a MemoryManager object for the
@@ -58,6 +60,7 @@ public class MemoryManager {
     public MemoryManager(File memoryFile) {
         freeBlocksList = new LinkedList<Pair>();
         memFile = memoryFile;
+        position = 0;
         try {
             raf = new RandomAccessFile(memFile, "rw");
 
@@ -110,6 +113,9 @@ public class MemoryManager {
     }
 
 
+    
+    
+    
     /**
      * Gets the sequence based on handle from the memory file
      * 
@@ -150,13 +156,13 @@ public class MemoryManager {
     public Handle insert(String seqID, int length, String seq)
         throws IOException {
         // checking if length is the actual length of seq
-        int seqLength = seq.length();
-        if (seqLength != length) {
-            System.out.println("Warning: Actual sequence length " + seqLength
-                + " does not match given length " + length);
-        }
+
         Pair pair1 = insertS(seqID);
+        System.out.println("pair 1 loc: " + pair1.getLoc());
+        System.out.println("pair 1 len: " + pair1.getLen());
         Pair pair2 = insertS(seq);
+        System.out.println("pair 2 loc: " + pair2.getLoc());
+        System.out.println("pair 2 len: " + pair2.getLen());
 
         return new Handle(pair1, pair2);
 
@@ -293,9 +299,11 @@ public class MemoryManager {
         // Convert to binary and write to memory file
         byte[] sByte = seqToBinary(s);
 
+        System.out.println("Free blocks list size: " + freeBlocksList.size());
+        
         if (freeBlocksList.size() == 0) {
             pos = (int)raf.length();
-            // System.out.println("position after seeking: " + pos);
+            System.out.println("position after seeking: " + pos);
             raf.seek(pos);
             raf.write(sByte);
         }
