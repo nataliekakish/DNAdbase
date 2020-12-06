@@ -64,24 +64,24 @@ public class HashTable<K, V> {
      *            , the object
      * @throws IOException
      */
-    public boolean insert(K s, V x, MemoryManager manager) throws IOException {
+    public int insert(K s, V x, MemoryManager manager) throws IOException {
+
         // use hash function to find position
         int pos = (int)sfold((String)s, size);
         // if spot is taken
         if (hashTable[pos] != null) {
 
-            
             // position after probing
             int pos2 = linearProbeInsert(pos, s, manager);
             // if bucket is full
-            if (pos2 == -1) {
-                return false;
+            if (pos2 == -2 || pos2 == -1) {
+                return pos2;
             }
             else {
                 hashTable[pos2] = x;
                 numObjects++;
                 tombstones[pos2] = false;
-                return true;
+                return 0;
             }
         }
         // if spot is empty
@@ -89,7 +89,7 @@ public class HashTable<K, V> {
             hashTable[pos] = x;
             numObjects++;
             tombstones[pos] = false;
-            return true;
+            return 0;
         }
     }
 
@@ -107,7 +107,8 @@ public class HashTable<K, V> {
     public V remove(K s, MemoryManager manager) throws IOException {
         int pos = (int)sfold((String)s, size);
 
-        if (hashTable[pos] != null || (hashTable[pos] == null && tombstones[pos] == true)) {
+        if (hashTable[pos] != null || (hashTable[pos] == null
+            && tombstones[pos] == true)) {
 
             // position after probing
             int pos2 = linearProbeRemove(pos, s, manager);
@@ -145,7 +146,8 @@ public class HashTable<K, V> {
 
         int pos = (int)sfold((String)s, size);
 
-        if (hashTable[pos] != null) {
+        if (hashTable[pos] != null || (hashTable[pos] == null
+            && tombstones[pos] == true)) {
             // position after probing
             int pos2 = linearProbeRemove(pos, s, manager);
 
@@ -183,7 +185,7 @@ public class HashTable<K, V> {
         int endOfBucket = findEndOfBucket(pos);
 
         // Position to end of bucket
-        for (int i = pos; i < endOfBucket; i++) {
+        for (int i = pos; i <= endOfBucket; i++) {
             // if the value is not null and it's not a tombstone
             if (hashTable[i] != null && tombstones[i] == false) {
                 // if the handles are equal to each other
@@ -293,7 +295,7 @@ public class HashTable<K, V> {
         if (indexOfTombstone != -1) {
             return indexOfTombstone;
         }
-        return -1;
+        return -2;
     }
 
 
@@ -342,6 +344,7 @@ public class HashTable<K, V> {
      * @return s's position in the hash table
      */
     long sfold(String s, int M) {
+
         int intLength = s.length() / 4;
         long sum = 0;
         for (int j = 0; j < intLength; j++) {

@@ -46,8 +46,9 @@ public class MemoryManager {
 
     /** Memory file */
     private RandomAccessFile raf;
-    
+
     private int position;
+
 
     /**
      * creates a MemoryManager object for the
@@ -95,6 +96,7 @@ public class MemoryManager {
      */
     public String getSequenceID(Handle handle) throws IOException {
 
+        position = (int)raf.length();
         int x = handle.getSeqIdHandle().getLoc();
 
         int padding = 0;
@@ -105,6 +107,7 @@ public class MemoryManager {
 
         byte[] b = new byte[(handle.getSeqIdHandle().getLen() + padding) / 8];
 
+        // System.out.println("getting from position: " + (x / 8));
         raf.seek(x / 8);
         raf.read(b);
 
@@ -113,9 +116,6 @@ public class MemoryManager {
     }
 
 
-    
-    
-    
     /**
      * Gets the sequence based on handle from the memory file
      * 
@@ -155,15 +155,15 @@ public class MemoryManager {
      */
     public Handle insert(String seqID, int length, String seq)
         throws IOException {
-        // checking if length is the actual length of seq
 
         Pair pair1 = insertS(seqID);
-        System.out.println("pair 1 loc: " + pair1.getLoc());
-        System.out.println("pair 1 len: " + pair1.getLen());
+// System.out.println("pair 1 loc: " + pair1.getLoc());
+// System.out.println("pair 1 len: " + pair1.getLen());
         Pair pair2 = insertS(seq);
-        System.out.println("pair 2 loc: " + pair2.getLoc());
-        System.out.println("pair 2 len: " + pair2.getLen());
+// System.out.println("pair 2 loc: " + pair2.getLoc());
+// System.out.println("pair 2 len: " + pair2.getLen());
 
+        updateFreeBlocksList();
         return new Handle(pair1, pair2);
 
     }
@@ -184,42 +184,36 @@ public class MemoryManager {
         Pair seqHandle = handle.getSeqHandle();
         Pair seqIdHandle = handle.getSeqIdHandle();
 
+        int seqIdPadding = (8 - ((seqIdHandle.getLen()) % 8)) % 8;
+        int seqPadding = (8 - ((seqHandle.getLen()) % 8)) % 8;
+
         // System.out.println("list size: " + freeBlocksList.size());
-        
+
         // When the size of free block list is 0
         if (freeBlocksList.size() == 0) {
             if (seqIdHandle.getLoc() > seqHandle.getLoc()) {
 
-                int seqIdPadding = (8 - ((seqIdHandle.getLen()) % 8)) % 8;
-                int seqPadding = (8 - ((seqHandle.getLen()) % 8)) % 8;
-
                 freeBlocksList.add(new Pair(seqHandle.getLoc(), seqHandle
                     .getLen() + seqPadding));
                 updateFreeBlocksList();
                 freeBlocksList.add(new Pair(seqIdHandle.getLoc(), seqIdHandle
                     .getLen() + seqIdPadding));
-                updateFreeBlocksList();
+                // updateFreeBlocksList();
             }
             else {
 
-                int seqIdPadding = (8 - ((seqIdHandle.getLen()) % 8)) % 8;
-                int seqPadding = (8 - ((seqHandle.getLen()) % 8)) % 8;
-
                 freeBlocksList.add(new Pair(seqIdHandle.getLoc(), seqIdHandle
                     .getLen() + seqIdPadding));
                 updateFreeBlocksList();
                 freeBlocksList.add(new Pair(seqHandle.getLoc(), seqHandle
                     .getLen() + seqPadding));
-                updateFreeBlocksList();
+                // updateFreeBlocksList();
             }
 
         }
         else { // When size of free block list is greater than 0
 
             boolean insertedSequence = false;
-
-            int seqIdPadding = (8 - ((seqIdHandle.getLen()) % 8)) % 8;
-            int seqPadding = (8 - ((seqHandle.getLen()) % 8)) % 8;
 
             // Find a place to insert free block after remove
             // For the sequence
@@ -228,7 +222,7 @@ public class MemoryManager {
                     freeBlocksList.add(i, new Pair(seqHandle.getLoc(), seqHandle
                         .getLen() + seqPadding));
                     insertedSequence = true;
-                    updateFreeBlocksList();
+                    // updateFreeBlocksList();
                     break;
                 }
             }
@@ -236,7 +230,7 @@ public class MemoryManager {
             if (!insertedSequence) {
                 freeBlocksList.add(new Pair(seqHandle.getLoc(), seqHandle
                     .getLen() + seqPadding));
-                updateFreeBlocksList();
+                // updateFreeBlocksList();
             }
 
             insertedSequence = false;
@@ -246,7 +240,7 @@ public class MemoryManager {
                     freeBlocksList.add(i, new Pair(seqIdHandle.getLoc(),
                         seqIdHandle.getLen() + seqIdPadding));
                     insertedSequence = true;
-                    updateFreeBlocksList();
+                    // updateFreeBlocksList();
                     break;
                 }
             }
@@ -254,7 +248,7 @@ public class MemoryManager {
             if (!insertedSequence) {
                 freeBlocksList.add(new Pair(seqIdHandle.getLoc(), seqIdHandle
                     .getLen() + seqIdPadding));
-                updateFreeBlocksList();
+                // updateFreeBlocksList();
             }
 
         }
@@ -299,19 +293,26 @@ public class MemoryManager {
         // Convert to binary and write to memory file
         byte[] sByte = seqToBinary(s);
 
-        System.out.println("Free blocks list size: " + freeBlocksList.size());
-        
+        // System.out.println("Free blocks list size: " +
+        // freeBlocksList.size());
+
         if (freeBlocksList.size() == 0) {
             pos = (int)raf.length();
-            System.out.println("position after seeking: " + pos);
+            // System.out.println("position after seeking: " + pos);
+            // System.out.println(pos);
+
             raf.seek(pos);
             raf.write(sByte);
         }
         else {
-            int bestFitPos = bestFitPos(sByte.length);
+            int bestFitPos = bestFitPos(sByte.length * 8);
+
+            // System.out.println("best fit pos for " + s + ": " + bestFitPos);
 
             if (bestFitPos == -1) {
+
                 pos = (int)raf.length();
+                // System.out.println("inserting " + s + " in pos " + pos);
                 raf.seek(pos);
                 raf.write(sByte);
             }
@@ -322,16 +323,24 @@ public class MemoryManager {
 
                 int newFreeBlockLen = (freeBlocksList.get(bestFitPos).getLen()
                     - sByte.length * 8) / 8;
+
                 int newFreeBlockLoc = (freeBlocksList.get(bestFitPos).getLoc()
                     + sByte.length * 8) / 8;
-                freeBlocksList.get(bestFitPos).setLen(newFreeBlockLen);
-                freeBlocksList.get(bestFitPos).setLoc(newFreeBlockLoc);
 
+                // System.out.println("newFreeBlockLen: " + newFreeBlockLen);
                 if (newFreeBlockLen == 0) {
+                    // System.out.println("newFreeBlockLen: " +
+                    // newFreeBlockLen);
                     freeBlocksList.remove(bestFitPos);
                 }
+                if (freeBlocksList.size() != 0) {
+                    freeBlocksList.get(bestFitPos).setLen(newFreeBlockLen * 8);
+                    freeBlocksList.get(bestFitPos).setLoc(newFreeBlockLoc * 8);
+                }
+
             }
         }
+
         return new Pair(pos * 8, s.length() * 2);
     }
 
@@ -343,32 +352,56 @@ public class MemoryManager {
      * @throws IOException
      */
     public void updateFreeBlocksList() throws IOException {
-        
-        
+
+        for (int i = 0; i < freeBlocksList.size(); i++) {
+            if (freeBlocksList.get(i).getLen() == 0) {
+                freeBlocksList.remove(i);
+            }
+
+        }
+
         for (int i = 1; i < freeBlocksList.size(); i++) {
             Pair curr = freeBlocksList.get(i - 1);
             Pair next = freeBlocksList.get(i);
             // if two free blocks adjacent, merge
             if (curr.getLoc() + curr.getLen() == next.getLoc()) {
-                
+
                 int currPadding = (8 - ((curr.getLen()) % 8)) % 8;
                 int nextPadding = (8 - ((next.getLen()) % 8)) % 8;
-                
-                
-                freeBlocksList.get(i - 1).setLen(curr.getLen() + currPadding + next.getLen() + nextPadding);
+
+                freeBlocksList.get(i - 1).setLen(curr.getLen() + currPadding
+                    + next.getLen() + nextPadding);
                 freeBlocksList.remove(i);
                 i--;
             }
 
         }
-        
-//        
-//        System.out.println("RAF size: " + raf.length());
-//        System.out.println("Sequence location + length " + (freeBlocksList.get(freeBlocksList.size() - 1).getLen() + freeBlocksList.get(freeBlocksList.size() - 1).getLoc()) / 8);
 
-        if (raf.length() == (freeBlocksList.get(freeBlocksList.size() - 1).getLen() + freeBlocksList.get(freeBlocksList.size() - 1).getLoc()) / 8) {
-            freeBlocksList.remove(freeBlocksList.size() - 1);
+        if (freeBlocksList.size() > 0) {
+
+            if (raf.length() == (freeBlocksList.getLast().getLen()
+                + freeBlocksList.getLast().getLoc()) / 8) {
+
+                // System.out.println("\n\nDECREMENTING\n");
+
+                // System.out.println("decrementing position by " +
+                // (freeBlocksList.get(
+                // freeBlocksList.size() - 1).getLen() + freeBlocksList.get(
+                // freeBlocksList.size() - 1).getLoc()) / 8);
+                raf.setLength((freeBlocksList.getLast().getLoc()) / 8);
+                freeBlocksList.removeLast();
+
+            }
         }
+
+        for (int i = 0; i < freeBlocksList.size(); i++) {
+            if (freeBlocksList.get(i).getLen() == 0) {
+                freeBlocksList.remove(i);
+            }
+        }
+
+// System.out.println(freeBlocksList.size());
+// System.out.println("new raf length " + raf.length());
 
     }
 
@@ -384,7 +417,6 @@ public class MemoryManager {
         int currBestFit = -1;
         int ct = 0;
         while (ct < freeBlocksList.size()) {
-
             if (freeBlocksList.get(ct).getLen() >= len) {
                 currBestFit = ct;
             }
@@ -469,11 +501,6 @@ public class MemoryManager {
             }
 
         }
-
-        // System.out.println(byteArr.length);
-// for (int j = 0; j < byteArr.length; j++) {
-// System.out.println(Integer.toBinaryString(byteArr[j]));
-// }
 
         return byteArr;
 
