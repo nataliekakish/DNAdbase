@@ -1,5 +1,8 @@
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 // On my honor:
 //
@@ -67,6 +70,9 @@ public class DNAdbase {
                 if (memFile != null) {
                     new Parser("sampleIn.txt", 32, memFile);
                 }
+                
+                Path path = Paths.get("output.bin");
+                Files.delete(path);
             }
             catch (IOException e) {
                 System.out.println("Couldnt create memory file");

@@ -67,19 +67,6 @@ public class MemoryManager {
 
 
     /**
-     * Gets the handle from sequence ID
-     * 
-     * @param sequenceID
-     *            the sequence ID
-     * @return Handle handle
-     */
-    public Handle getHandle(String sequenceID) {
-
-        return null;
-    }
-
-
-    /**
      * Gets the sequenceID based on handle from the memory file
      * 
      * @param handle
@@ -178,24 +165,13 @@ public class MemoryManager {
 
         // When the size of free block list is 0
         if (freeBlocksList.size() == 0) {
-            if (seqIdHandle.getLoc() > seqHandle.getLoc()) {
 
-                freeBlocksList.add(new Pair(seqHandle.getLoc(), seqHandle
-                    .getLen() + seqPadding));
-                updateFreeBlocksList();
-                freeBlocksList.add(new Pair(seqIdHandle.getLoc(), seqIdHandle
-                    .getLen() + seqIdPadding));
-                // updateFreeBlocksList();
-            }
-            else {
-
-                freeBlocksList.add(new Pair(seqIdHandle.getLoc(), seqIdHandle
-                    .getLen() + seqIdPadding));
-                updateFreeBlocksList();
-                freeBlocksList.add(new Pair(seqHandle.getLoc(), seqHandle
-                    .getLen() + seqPadding));
-                // updateFreeBlocksList();
-            }
+            freeBlocksList.add(new Pair(seqIdHandle.getLoc(), seqIdHandle
+                .getLen() + seqIdPadding));
+            updateFreeBlocksList();
+            freeBlocksList.add(new Pair(seqHandle.getLoc(), seqHandle.getLen()
+                + seqPadding));
+            // updateFreeBlocksList();
 
         }
         else { // When size of free block list is greater than 0
@@ -352,6 +328,7 @@ public class MemoryManager {
 
         }
 
+        // Remove last free block if there's nothing after it
         if (freeBlocksList.size() > 0 && raf.length() == (freeBlocksList
             .getLast().getLen() + freeBlocksList.getLast().getLoc()) / 8) {
 
@@ -404,7 +381,8 @@ public class MemoryManager {
      * converts sequence to corresponding
      * Binary representation
      * 
-     * @param seq to turn into binary
+     * @param seq
+     *            to turn into binary
      * @return byte array
      */
     public byte[] seqToBinary(String seq) {
@@ -472,8 +450,11 @@ public class MemoryManager {
 
     /**
      * Turns binary into sequences
-     * @param bin binary to convert
-     * @param seqLength length of sequence
+     * 
+     * @param bin
+     *            binary to convert
+     * @param seqLength
+     *            length of sequence
      * @return String string form
      */
     public String binaryToSeq(byte[] bin, int seqLength) {
