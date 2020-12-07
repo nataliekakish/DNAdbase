@@ -68,7 +68,6 @@ public class Pair {
 
     }
 
-
     /**
      * gets the location in the memory file
      * 

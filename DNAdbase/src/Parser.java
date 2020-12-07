@@ -107,6 +107,7 @@ public class Parser {
                     + ")");
             }
 
+            
             Handle handle2 = hashTable.find(seqID, memManager);
             // if it wasn't found
             if (handle2 == null) {

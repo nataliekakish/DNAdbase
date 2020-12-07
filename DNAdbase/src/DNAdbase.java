@@ -33,6 +33,7 @@ import java.nio.file.Paths;
  */
 public class DNAdbase {
 
+    
     /**
      * main method
      * calls Parser to parse command file

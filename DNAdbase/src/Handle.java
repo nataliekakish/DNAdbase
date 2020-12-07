@@ -28,6 +28,7 @@
  */
 public class Handle {
 
+    
     private Pair seqIdHandle;
     private Pair seqHandle;
 

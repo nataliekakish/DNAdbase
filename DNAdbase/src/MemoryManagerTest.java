@@ -32,6 +32,7 @@ import student.TestCase;
  */
 public class MemoryManagerTest extends TestCase {
 
+    
     private MemoryManager memManager;
 
     /**
