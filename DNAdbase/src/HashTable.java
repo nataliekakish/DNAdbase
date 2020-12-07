@@ -39,6 +39,7 @@ public class HashTable<K, V> {
     private int size;
     private Boolean[] tombstones;
 
+
     /**
      * The Hash table object
      * 
@@ -60,9 +61,13 @@ public class HashTable<K, V> {
 
     /**
      * Insert for hash table
-     * @param s key to insert
-     * @param x value
-     * @param manager Memory Manager
+     * 
+     * @param s
+     *            key to insert
+     * @param x
+     *            value
+     * @param manager
+     *            Memory Manager
      * @return position to insert at
      * @throws IOException
      */
@@ -98,8 +103,11 @@ public class HashTable<K, V> {
 
     /**
      * Remove method for hash table
-     * @param s key to remvoe
-     * @param manager Memory Manager
+     * 
+     * @param s
+     *            key to remvoe
+     * @param manager
+     *            Memory Manager
      * @return V value removed
      * @throws IOException
      */
@@ -303,11 +311,14 @@ public class HashTable<K, V> {
      */
     private int findEndOfBucket(int pos) {
         int bucketNum = 1;
+        int position = pos;
 
-        while (pos > 32) {
-            pos %= 32;
-            bucketNum++;
-        }
+// while (position > 32) {
+// position -= 32;
+// bucketNum++;
+// }
+
+        bucketNum += (position / 32);
 
         int endOfBucket = (bucketNum * 32) - 1;
 
@@ -329,7 +340,6 @@ public class HashTable<K, V> {
     }
 
 
-    
     /**
      * Hash function
      * 
