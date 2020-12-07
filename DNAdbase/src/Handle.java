@@ -18,7 +18,8 @@
 // during the discussion. I have violated neither the spirit nor
 // letter of this restriction.
 /**
- * Generic HashTable implementation
+ * Handle object that contains handles
+ * of sequenceID and sequences
  * 
  * @author James Kim (thejameskim)
  * @author Natalie Kakish (Nataliekakish)
@@ -36,7 +37,7 @@ public class Handle {
      * @param sequenceIDHandle
      *            , start pos and length of the sequence ID
      *            in the memory file
-     * @param length
+     * @param sequenceHandle
      *            , start pos and length of the sequence
      *            in the memory file
      */
@@ -96,18 +97,6 @@ public class Handle {
         seqHandle = sequenceHandle;
     }
 
-    /**
-     * Equals method
-     * @param handle to compare to
-     * @return boolean for equality
-     * @Override
-     */
-    public boolean equals(Handle handle) {
-        if (this.getSeqIdHandle().equals(handle.getSeqIdHandle()) && this
-            .getSeqHandle().equals(handle.getSeqHandle())) {
-            return true;
-        }
-        return false;
-    }
+ 
 
 }

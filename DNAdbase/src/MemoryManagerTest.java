@@ -31,14 +31,14 @@ import student.TestCase;
  *
  */
 public class MemoryManagerTest extends TestCase {
-    File file = new File("test");
-    MemoryManager memManager;
 
+    private MemoryManager memManager;
 
     /**
      * Setup
      */
     public void setUp() {
+        File file = new File("test");
         memManager = new MemoryManager(file);
     }
 
@@ -104,8 +104,8 @@ public class MemoryManagerTest extends TestCase {
         // new freeBlocksList
         LinkedList<Pair> list = memManager.getFreeBlocksList();
 
-        assertEquals(3, list.size());
-        assertEquals(15, list.get(0).getLoc());
+        assertEquals(4, list.size());
+        assertEquals(0, list.get(0).getLoc());
 
         // should go into first block
         // linked list should have size same size
@@ -114,9 +114,9 @@ public class MemoryManagerTest extends TestCase {
         // new freeBlocksList
         LinkedList<Pair> list2 = memManager.getFreeBlocksList();
 
-        assertEquals(3, list2.size());
-        assertEquals(6, list2.get(0).getLen());
-        assertEquals(19, list2.get(0).getLoc());
+        assertEquals(4, list2.size());
+        assertEquals(5, list2.get(0).getLen());
+        assertEquals(0, list2.get(0).getLoc());
 
     }
 
@@ -132,7 +132,7 @@ public class MemoryManagerTest extends TestCase {
         memManager.setFreeBlocksList(freeBlocks);
         memManager.updateFreeBlocksList();
         assertEquals(1, freeBlocks.size());
-        assertEquals(15, freeBlocks.get(0).getLen());
+        assertEquals(24, freeBlocks.get(0).getLen());
 
     }
 

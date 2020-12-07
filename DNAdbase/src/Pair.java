@@ -18,7 +18,7 @@
 // during the discussion. I have violated neither the spirit nor
 // letter of this restriction.
 /**
- * Generic HashTable implementation
+ * Pair object
  * 
  * @author James Kim (thejameskim)
  * @author Natalie Kakish (Nataliekakish)
@@ -88,19 +88,6 @@ public class Pair {
     public int getLen() {
         return len;
 
-    }
-    
-    /**
-     * Equals method
-     * @param pair to compare to
-     * @return boolean for equality
-     * @Override
-     */
-    public boolean equals(Pair pair) {
-        if (this.getLoc() == pair.getLoc() && this.getLen() == pair.getLen()) {
-            return true;
-        }
-        return false;
     }
 
 }

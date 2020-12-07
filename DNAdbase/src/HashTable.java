@@ -21,26 +21,29 @@ import java.util.Arrays;
 // during the discussion. I have violated neither the spirit nor
 // letter of this restriction.
 /**
- * Generic HashTable implementation
+ * Generic table implementation
  * 
  * @author James Kim (thejameskim)
  * @author Natalie Kakish (Nataliekakish)
  * @version (2020-11-27)
+ * @param <K>
+ *            The key
+ * @param <V>
+ *            The key value
  *
  */
 public class HashTable<K, V> {
 
     private int numObjects;
-    private V[] hashTable;
+    private V[] table;
     private int size;
     private Boolean[] tombstones;
 
-
     /**
-     * creates a fixed size hashtable
-     * with given array
+     * The Hash table object
      * 
      * @param hTable
+     *            array for the hash table
      */
     public HashTable(V[] hTable) {
 
@@ -50,18 +53,17 @@ public class HashTable<K, V> {
         tombstones = new Boolean[size];
         // set all tombstones to false
         Arrays.fill(tombstones, false);
-        hashTable = hTable;
+        table = hTable;
 
     }
 
 
     /**
-     * inserts
-     * 
-     * @param s
-     *            , the string representing object
-     * @param x
-     *            , the object
+     * Insert for hash table
+     * @param s key to insert
+     * @param x value
+     * @param manager Memory Manager
+     * @return position to insert at
      * @throws IOException
      */
     public int insert(K s, V x, MemoryManager manager) throws IOException {
@@ -69,7 +71,7 @@ public class HashTable<K, V> {
         // use hash function to find position
         int pos = (int)sfold((String)s, size);
         // if spot is taken
-        if (hashTable[pos] != null) {
+        if (table[pos] != null) {
 
             // position after probing
             int pos2 = linearProbeInsert(pos, s, manager);
@@ -78,7 +80,7 @@ public class HashTable<K, V> {
                 return pos2;
             }
             else {
-                hashTable[pos2] = x;
+                table[pos2] = x;
                 numObjects++;
                 tombstones[pos2] = false;
                 return 0;
@@ -86,7 +88,7 @@ public class HashTable<K, V> {
         }
         // if spot is empty
         else {
-            hashTable[pos] = x;
+            table[pos] = x;
             numObjects++;
             tombstones[pos] = false;
             return 0;
@@ -95,20 +97,16 @@ public class HashTable<K, V> {
 
 
     /**
-     * removes an obj from the HashTable
-     * 
-     * @param s
-     *            , the string representing object
-     * @param x
-     *            , the object
-     * @return true if successful, false otherwise
+     * Remove method for hash table
+     * @param s key to remvoe
+     * @param manager Memory Manager
+     * @return V value removed
      * @throws IOException
      */
     public V remove(K s, MemoryManager manager) throws IOException {
         int pos = (int)sfold((String)s, size);
 
-        if (hashTable[pos] != null || (hashTable[pos] == null
-            && tombstones[pos] == true)) {
+        if (table[pos] != null || tombstones[pos]) {
 
             // position after probing
             int pos2 = linearProbeRemove(pos, s, manager);
@@ -117,8 +115,8 @@ public class HashTable<K, V> {
                 return null;
             }
             else {
-                V v = hashTable[pos2];
-                hashTable[pos2] = null;
+                V v = table[pos2];
+                table[pos2] = null;
                 tombstones[pos2] = true;
                 numObjects--;
                 return v;
@@ -146,8 +144,7 @@ public class HashTable<K, V> {
 
         int pos = (int)sfold((String)s, size);
 
-        if (hashTable[pos] != null || (hashTable[pos] == null
-            && tombstones[pos] == true)) {
+        if (table[pos] != null || tombstones[pos]) {
             // position after probing
             int pos2 = linearProbeRemove(pos, s, manager);
 
@@ -156,13 +153,11 @@ public class HashTable<K, V> {
             }
             else {
 
-                return hashTable[pos2];
+                return table[pos2];
             }
 
         }
-        else {
-            return null;
-        }
+        return null;
 
     }
 
@@ -187,15 +182,15 @@ public class HashTable<K, V> {
         // Position to end of bucket
         for (int i = pos; i <= endOfBucket; i++) {
             // if the value is not null and it's not a tombstone
-            if (hashTable[i] != null && tombstones[i] == false) {
+            if (table[i] != null && !tombstones[i]) {
                 // if the handles are equal to each other
-                if (s.equals(manager.getSequenceID((Handle)hashTable[i]))) {
+                if (s.equals(manager.getSequenceID((Handle)table[i]))) {
                     return i;
                 }
 
             } // if empty spot is encountered while probing, nothing to remove
               // Keep probing if there's a tombstone
-            else if (hashTable[i] == null && tombstones[i] == false) {
+            else if (table[i] == null && !tombstones[i]) {
                 return -1;
             }
         }
@@ -203,14 +198,14 @@ public class HashTable<K, V> {
         // Wrap around to start of bucket to position
         for (int i = startOfBucket; i < pos; i++) {
             // if the value is not null and it's not a tombstone
-            if (hashTable[i] != null && tombstones[i] == false) {
+            if (table[i] != null && !tombstones[i]) {
                 // if the handles are equal to each other
-                if (s.equals(manager.getSequenceID((Handle)hashTable[i]))) {
+                if (s.equals(manager.getSequenceID((Handle)table[i]))) {
                     return i;
                 }
 
             } // if empty spot is encountered while probing, nothing to remove
-            else if (hashTable[i] == null && tombstones[i] == false) {
+            else if (table[i] == null && !tombstones[i]) {
                 return -1;
             }
         }
@@ -242,7 +237,7 @@ public class HashTable<K, V> {
         // Position to end of bucket
         for (int i = pos; i <= endOfBucket; i++) {
             // If found empty spot or if there is a tombstone at that index
-            if (hashTable[i] == null) {
+            if (table[i] == null) {
 
                 // If we already found a tombstone we can insert at
                 if (indexOfTombstone != -1) {
@@ -254,13 +249,13 @@ public class HashTable<K, V> {
             }
             // Found duplicate, return -1; if key is equal to key of handle at
             // index i
-            else if (hashTable[i] != null && s.equals(manager.getSequenceID(
-                (Handle)hashTable[i]))) {
+            else if (table[i] != null && s.equals(manager.getSequenceID(
+                (Handle)table[i]))) {
                 return -1;
             }
             // If found potential tombstone to insert; keep probing for
             // duplicates
-            else if (tombstones[i] == true && indexOfTombstone == -1) {
+            else if (tombstones[i] && indexOfTombstone == -1) {
                 indexOfTombstone = i;
             }
 
@@ -269,7 +264,7 @@ public class HashTable<K, V> {
         // Wrap around to start of bucket to position
         for (int i = startOfBucket; i < pos; i++) {
             // If found empty spot or if there is a tombstone at that index
-            if (hashTable[i] == null) {
+            if (table[i] == null) {
 
                 // If we already found a tombstone we can insert at
                 if (indexOfTombstone != -1) {
@@ -280,14 +275,14 @@ public class HashTable<K, V> {
 
             }
             // Found duplicate, return -1
-            else if (hashTable[i] != null && s.equals(manager.getSequenceID(
-                (Handle)hashTable[i]))) {
+            else if (table[i] != null && s.equals(manager.getSequenceID(
+                (Handle)table[i]))) {
 
                 return -1;
             }
             // If found potential tombstone to insert; keep probing for
             // duplicates
-            else if (tombstones[i] == true && indexOfTombstone == -1) {
+            else if (tombstones[i] && indexOfTombstone == -1) {
                 indexOfTombstone = i;
             }
         }
@@ -335,20 +330,20 @@ public class HashTable<K, V> {
 
 
     /**
-     * Hash Function
+     * Hash function
      * 
      * @param s
-     *            , the string to be hashed
-     * @param M
-     *            , the size of the hash table
-     * @return s's position in the hash table
+     *            string to base the function from
+     * @param m
+     *            int
+     * @return value from hashing
      */
-    long sfold(String s, int M) {
+    private long sfold(String s, int m) {
 
         int intLength = s.length() / 4;
         long sum = 0;
         for (int j = 0; j < intLength; j++) {
-            char c[] = s.substring(j * 4, (j * 4) + 4).toCharArray();
+            char[] c = s.substring(j * 4, (j * 4) + 4).toCharArray();
             long mult = 1;
             for (int k = 0; k < c.length; k++) {
                 sum += c[k] * mult;
@@ -356,7 +351,7 @@ public class HashTable<K, V> {
             }
         }
 
-        char c[] = s.substring(intLength * 4).toCharArray();
+        char[] c = s.substring(intLength * 4).toCharArray();
         long mult = 1;
         for (int k = 0; k < c.length; k++) {
             sum += c[k] * mult;
@@ -364,12 +359,12 @@ public class HashTable<K, V> {
         }
 
         sum = (sum * sum) >> 8;
-        return (Math.abs(sum) % M);
+        return (Math.abs(sum) % m);
     }
 
 
     /**
-     * returns the num of objects in the hashtable
+     * returns the num of objects in the table
      * 
      * @return numObjects the num of objects
      */
@@ -379,10 +374,12 @@ public class HashTable<K, V> {
 
 
     /**
-     * returns hashTable array
+     * Returns the array
+     * 
+     * @return V[] array from hash table
      */
     public V[] getArray() {
-        return hashTable;
+        return table;
     }
 
 }

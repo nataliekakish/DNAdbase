@@ -22,7 +22,7 @@ import java.util.Scanner;
 // during the discussion. I have violated neither the spirit nor
 // letter of this restriction.
 /**
- * Parses the command file
+ * Parses the command file and executes functions
  * 
  * @author James Kim (thejameskim)
  * @author Natalie Kakish (Nataliekakish)
@@ -40,24 +40,23 @@ public class Parser {
     /** array for hash table */
     private Handle[] handles;
 
-    /** to track the curr position in the file */
-    private int position;
-
-
     /**
-     * parses command file
-     * calls parseCommand with each line
+     * Parser for commands
      * 
      * @param file
+     *            name
+     * @param hashTableSz
+     *            size of hash table
+     * @param memFile
+     *            memory file
      * @throws IOException
      */
     public Parser(String file, int hashTableSz, File memFile)
         throws IOException {
 
-        position = 0;
-
         if (hashTableSz % 32 != 0) {
-            System.out.println("Error: hashtable size must be a multiple of 32");
+            System.out.println("Error: hashtable "
+                + "size must be a multiple of 32");
 
         }
         else {
@@ -159,8 +158,6 @@ public class Parser {
             search(seqID);
 
         }
-        
-        //System.out.println(memManager.getFreeBlocksList().size());
 
     }
 
@@ -199,13 +196,13 @@ public class Parser {
         }
         else {
 
-            Handle[] handles = hashTable.getArray();
+            Handle[] allHandles = hashTable.getArray();
 
             System.out.println("Sequence IDs:");
-            for (int i = 0; i < handles.length; i++) {
+            for (int i = 0; i < allHandles.length; i++) {
 
-                if (handles[i] != null) {
-                    String seq = memManager.getSequenceID(handles[i]);
+                if (allHandles[i] != null) {
+                    String seq = memManager.getSequenceID(allHandles[i]);
                     System.out.println(seq + ": hash slot [" + i + "]");
 
                 }

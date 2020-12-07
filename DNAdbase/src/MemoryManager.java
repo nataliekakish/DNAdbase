@@ -41,14 +41,8 @@ public class MemoryManager {
     /** the list of free blocks */
     private LinkedList<Pair> freeBlocksList;
 
-    /** the memory file to manage */
-    private File memFile;
-
     /** Memory file */
     private RandomAccessFile raf;
-
-    private int position;
-
 
     /**
      * creates a MemoryManager object for the
@@ -60,8 +54,7 @@ public class MemoryManager {
      */
     public MemoryManager(File memoryFile) {
         freeBlocksList = new LinkedList<Pair>();
-        memFile = memoryFile;
-        position = 0;
+        File memFile = memoryFile;
         try {
             raf = new RandomAccessFile(memFile, "rw");
 
@@ -96,7 +89,6 @@ public class MemoryManager {
      */
     public String getSequenceID(Handle handle) throws IOException {
 
-        position = (int)raf.length();
         int x = handle.getSeqIdHandle().getLoc();
 
         int padding = 0;
@@ -143,25 +135,23 @@ public class MemoryManager {
 
 
     /**
-     * inserts a sequence into the memory file
+     * Insert method for memory
      * 
      * @param seqID
-     *            , the sequence ID
+     *            sequence ID
      * @param length
-     *            , the sequence length
+     *            length of sequence
      * @param seq
-     *            the sequence
+     *            sequence
+     * @return Handle object
      * @throws IOException
      */
     public Handle insert(String seqID, int length, String seq)
         throws IOException {
 
         Pair pair1 = insertS(seqID);
-// System.out.println("pair 1 loc: " + pair1.getLoc());
-// System.out.println("pair 1 len: " + pair1.getLen());
+
         Pair pair2 = insertS(seq);
-// System.out.println("pair 2 loc: " + pair2.getLoc());
-// System.out.println("pair 2 len: " + pair2.getLen());
 
         updateFreeBlocksList();
         return new Handle(pair1, pair2);
@@ -170,13 +160,10 @@ public class MemoryManager {
 
 
     /**
-     * removes sequence with given
-     * sequence ID from Memory file
+     * Remove method
      * 
-     * updates freeBlocksList
-     * 
-     * @param seqID
-     *            , the sequence ID
+     * @param handle
+     *            to remove
      * @throws IOException
      */
     public void remove(Handle handle) throws IOException {
@@ -280,12 +267,11 @@ public class MemoryManager {
 
 
     /**
-     * insert method for sequenceID and sequence
+     * Insert method to return pair to insert into memory
      * 
      * @param s
-     *            , the sequence ID or sequence
-     * @param length
-     *            , the length of the sequence ID or sequence
+     *            sequenceID
+     * @return Pair object
      * @throws IOException
      */
     public Pair insertS(String s) throws IOException {
@@ -293,13 +279,8 @@ public class MemoryManager {
         // Convert to binary and write to memory file
         byte[] sByte = seqToBinary(s);
 
-        // System.out.println("Free blocks list size: " +
-        // freeBlocksList.size());
-
         if (freeBlocksList.size() == 0) {
             pos = (int)raf.length();
-            // System.out.println("position after seeking: " + pos);
-            // System.out.println(pos);
 
             raf.seek(pos);
             raf.write(sByte);
@@ -307,12 +288,9 @@ public class MemoryManager {
         else {
             int bestFitPos = bestFitPos(sByte.length * 8);
 
-            // System.out.println("best fit pos for " + s + ": " + bestFitPos);
-
             if (bestFitPos == -1) {
 
                 pos = (int)raf.length();
-                // System.out.println("inserting " + s + " in pos " + pos);
                 raf.seek(pos);
                 raf.write(sByte);
             }
@@ -327,13 +305,10 @@ public class MemoryManager {
                 int newFreeBlockLoc = (freeBlocksList.get(bestFitPos).getLoc()
                     + sByte.length * 8) / 8;
 
-                // System.out.println("newFreeBlockLen: " + newFreeBlockLen);
                 if (newFreeBlockLen == 0) {
-                    // System.out.println("newFreeBlockLen: " +
-                    // newFreeBlockLen);
                     freeBlocksList.remove(bestFitPos);
                 }
-                if (freeBlocksList.size() != 0) {
+                if (freeBlocksList.size() != 0 && newFreeBlockLen != 0) {
                     freeBlocksList.get(bestFitPos).setLen(newFreeBlockLen * 8);
                     freeBlocksList.get(bestFitPos).setLoc(newFreeBlockLoc * 8);
                 }
@@ -346,7 +321,7 @@ public class MemoryManager {
 
 
     /**
-     * updates free block list after removing
+     * Updates free block list after removing
      * makes sure there aren't any adjacent free blocks
      * 
      * @throws IOException
@@ -377,21 +352,12 @@ public class MemoryManager {
 
         }
 
-        if (freeBlocksList.size() > 0) {
+        if (freeBlocksList.size() > 0 && raf.length() == (freeBlocksList
+            .getLast().getLen() + freeBlocksList.getLast().getLoc()) / 8) {
 
-            if (raf.length() == (freeBlocksList.getLast().getLen()
-                + freeBlocksList.getLast().getLoc()) / 8) {
+            raf.setLength((freeBlocksList.getLast().getLoc()) / 8);
+            freeBlocksList.removeLast();
 
-                // System.out.println("\n\nDECREMENTING\n");
-
-                // System.out.println("decrementing position by " +
-                // (freeBlocksList.get(
-                // freeBlocksList.size() - 1).getLen() + freeBlocksList.get(
-                // freeBlocksList.size() - 1).getLoc()) / 8);
-                raf.setLength((freeBlocksList.getLast().getLoc()) / 8);
-                freeBlocksList.removeLast();
-
-            }
         }
 
         for (int i = 0; i < freeBlocksList.size(); i++) {
@@ -400,39 +366,36 @@ public class MemoryManager {
             }
         }
 
-// System.out.println(freeBlocksList.size());
-// System.out.println("new raf length " + raf.length());
-
     }
 
 
     /**
-     * finds the position in the memory file
-     * best fit for the sequence/sequenceID
+     * Finds the best position within free blocks
      * 
-     * @return the best fit position for the sequence/sequenceid
+     * @param len
+     *            length of sequence
+     * @return index of best fit position
+     * @throws IOException
      */
     public int bestFitPos(int len) throws IOException {
-
         int currBestFit = -1;
-        int ct = 0;
-        while (ct < freeBlocksList.size()) {
-            if (freeBlocksList.get(ct).getLen() >= len) {
-                currBestFit = ct;
-            }
-            if (currBestFit != -1) {
-                for (int i = 0; i < freeBlocksList.size(); i++) {
-                    int currLen = freeBlocksList.get(i).getLen();
-                    int lastLen = freeBlocksList.get(currBestFit).getLen();
-                    if (currLen >= len && (lastLen - len) > (currLen - len)) {
-                        currBestFit = i;
-                    }
-                }
-                break;
-            }
-            ct++;
-        }
+        boolean firstFit = false;
 
+        for (int i = 0; i < freeBlocksList.size(); i++) {
+            if (freeBlocksList.get(i).getLen() >= len && !firstFit) {
+                currBestFit = i;
+                firstFit = true;
+            }
+
+            if (currBestFit != -1 && firstFit) {
+                int currLen = freeBlocksList.get(i).getLen();
+                int lastLen = freeBlocksList.get(currBestFit).getLen();
+
+                if (currLen >= len && (lastLen - len) > (currLen - len)) {
+                    currBestFit = i;
+                }
+            }
+        }
         return currBestFit;
     }
 
@@ -441,7 +404,7 @@ public class MemoryManager {
      * converts sequence to corresponding
      * Binary representation
      * 
-     * @param seq
+     * @param seq to turn into binary
      * @return byte array
      */
     public byte[] seqToBinary(String seq) {
@@ -508,19 +471,17 @@ public class MemoryManager {
 
 
     /**
-     * converts binary representation of
-     * sequence to string
-     * 
-     * @return sequence
+     * Turns binary into sequences
+     * @param bin binary to convert
+     * @param seqLength length of sequence
+     * @return String string form
      */
     public String binaryToSeq(byte[] bin, int seqLength) {
         String s = "";
         int padding = 0;
-        // 0011 //00 11 01 10
         if (((seqLength * 2) % 8) != 0) {
             padding = 8 - ((seqLength * 2) % 8);
-            // System.out.print("padding for length " + seqLength + " is: "
-            // + padding);
+
         }
         int mask = 0;
         int ct = 0;
