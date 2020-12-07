@@ -166,12 +166,21 @@ public class MemoryManager {
         // When the size of free block list is 0
         if (freeBlocksList.size() == 0) {
 
-            freeBlocksList.add(new Pair(seqIdHandle.getLoc(), seqIdHandle
-                .getLen() + seqIdPadding));
-            updateFreeBlocksList();
-            freeBlocksList.add(new Pair(seqHandle.getLoc(), seqHandle.getLen()
-                + seqPadding));
-            // updateFreeBlocksList();
+            if (seqIdHandle.getLoc() > seqHandle.getLoc()) {
+                freeBlocksList.add(new Pair(seqHandle.getLoc(), seqHandle
+                    .getLen() + seqPadding));
+                freeBlocksList.add(new Pair(seqIdHandle.getLoc(), seqIdHandle
+                    .getLen() + seqIdPadding));
+                updateFreeBlocksList();
+            }
+            else {
+                freeBlocksList.add(new Pair(seqIdHandle.getLoc(), seqIdHandle
+                    .getLen() + seqIdPadding));
+                updateFreeBlocksList();
+                freeBlocksList.add(new Pair(seqHandle.getLoc(), seqHandle
+                    .getLen() + seqPadding));
+                // updateFreeBlocksList();
+            }
 
         }
         else { // When size of free block list is greater than 0
@@ -388,14 +397,8 @@ public class MemoryManager {
     public byte[] seqToBinary(String seq) {
 
         int bytes = 0;
-        int padding;
-        if (((seq.length() * 2) % 8) != 0) {
-            padding = 8 - ((seq.length() * 2) % 8);
-        }
-        else {
-            padding = 0;
+        int padding = (8 - ((seq.length() * 2) % 8)) % 8;
 
-        }
         byte[] byteArr = new byte[(seq.length() * 2 + padding) / 8];
 
         int byteIndex = 0;
@@ -459,11 +462,8 @@ public class MemoryManager {
      */
     public String binaryToSeq(byte[] bin, int seqLength) {
         String s = "";
-        int padding = 0;
-        if (((seqLength * 2) % 8) != 0) {
-            padding = 8 - ((seqLength * 2) % 8);
+        int padding = (8 - ((seqLength * 2) % 8)) % 8;
 
-        }
         int mask = 0;
         int ct = 0;
         for (int i = 0; i < bin.length; i++) {
